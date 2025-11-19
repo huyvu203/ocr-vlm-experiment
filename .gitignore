@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environment
+.env
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Data (don't commit large datasets)
+data/raw/
+data/processed/
+
+# Outputs and results
+outputs/
+results/
+*.jsonl
+*.json
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Keep directory structure
+!data/raw/.gitkeep
+!data/processed/manifests/.gitkeep
+!data/processed/questions/.gitkeep
+!outputs/answers/.gitkeep
+!results/.gitkeep
