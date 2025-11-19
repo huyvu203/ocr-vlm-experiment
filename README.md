@@ -7,7 +7,7 @@ Implementation of a multimodal DocQA pipeline for evaluating direct vision-langu
 This project implements a **single-step vision-language pipeline**:
 
 ```
-Image + Question → VLM (GPT-4o/GPT-5) → Answer
+Image + Question → VLM (GPT-5) → Answer
 ```
 
 The pipeline eliminates traditional OCR stages by sending images and questions directly to multimodal language models, simplifying architecture while maintaining high accuracy on document understanding tasks.
@@ -114,7 +114,7 @@ ls data/raw/infographicvqa/*.png | wc -l   # Should show 500
 ```bash
 python scripts/05_answer_questions.py \
     --mode vlm_image \
-    --model gpt-4o \
+    --model gpt-5 \
     --questions data/processed/questions/dev.jsonl \
     --images-root data/raw \
     --output outputs/answers/vlm_quick_test.jsonl \
@@ -125,25 +125,25 @@ python scripts/05_answer_questions.py \
 ```bash
 python scripts/05_answer_questions.py \
     --mode vlm_image \
-    --model gpt-4o \
+    --model gpt-5 \
     --questions data/processed/questions/dev.jsonl \
     --images-root data/raw \
-    --output outputs/answers/vlm_gpt4o_dev.jsonl
+    --output outputs/answers/vlm_gpt5_dev.jsonl
 ```
 
 **Test set (380 questions, ~20 minutes, ~$3.38):**
 ```bash
 python scripts/05_answer_questions.py \
     --mode vlm_image \
-    --model gpt-4o \
+    --model gpt-5 \
     --questions data/processed/questions/test.jsonl \
     --images-root data/raw \
-    --output outputs/answers/vlm_gpt4o_test.jsonl
+    --output outputs/answers/vlm_gpt5_test.jsonl
 ```
 
 **Model options:**
-- `gpt-4o` - Recommended, works perfectly with vision
-- `gpt-5` - May have vision support issues (use gpt-4o instead)
+- `gpt-5` - Primary model with native multimodal capabilities
+- `gpt-4o` - Fallback option if GPT-5 has issues
 - `gpt-4-turbo` - Alternative option
 
 **Optional flags:**
@@ -157,23 +157,23 @@ Compute accuracy and operational metrics:
 ```bash
 # Evaluate dev set
 python scripts/06_evaluate_qa.py \
-    --pred vlm=outputs/answers/vlm_gpt4o_dev.jsonl \
+    --pred vlm=outputs/answers/vlm_gpt5_dev.jsonl \
     --questions data/processed/questions/dev.jsonl \
-    --output results/vlm_gpt4o_dev_metrics.json
+    --output results/vlm_gpt5_dev_metrics.json
 
 # Evaluate test set
 python scripts/06_evaluate_qa.py \
-    --pred vlm=outputs/answers/vlm_gpt4o_test.jsonl \
+    --pred vlm=outputs/answers/vlm_gpt5_test.jsonl \
     --questions data/processed/questions/test.jsonl \
-    --output results/vlm_gpt4o_test_metrics.json
+    --output results/vlm_gpt5_test_metrics.json
 ```
 
 **Add `--verbose` flag to see individual errors:**
 ```bash
 python scripts/06_evaluate_qa.py \
-    --pred vlm=outputs/answers/vlm_gpt4o_test.jsonl \
+    --pred vlm=outputs/answers/vlm_gpt5_test.jsonl \
     --questions data/processed/questions/test.jsonl \
-    --output results/vlm_gpt4o_test_metrics.json \
+    --output results/vlm_gpt5_test_metrics.json \
     --verbose
 ```
 
@@ -183,12 +183,12 @@ python scripts/06_evaluate_qa.py \
 ```bash
 # The evaluation script prints summary to terminal
 # Or view the JSON file:
-cat results/vlm_gpt4o_test_metrics.json | jq '.'
+cat results/vlm_gpt5_test_metrics.json | jq '.'
 
 # View specific metrics:
-cat results/vlm_gpt4o_test_metrics.json | jq '.vlm.accuracy'
-cat results/vlm_gpt4o_test_metrics.json | jq '.vlm.operational'
-cat results/vlm_gpt4o_test_metrics.json | jq '.vlm.by_question_type'
+cat results/vlm_gpt5_test_metrics.json | jq '.vlm.accuracy'
+cat results/vlm_gpt5_test_metrics.json | jq '.vlm.operational'
+cat results/vlm_gpt5_test_metrics.json | jq '.vlm.by_question_type'
 ```
 
 **Output includes:**
@@ -209,14 +209,14 @@ cp reports/huy_report_template.md reports/huy_report.md
 nano reports/huy_report.md
 ```
 
-Fill in the metrics from `results/vlm_gpt4o_test_metrics.json`.
+Fill in the metrics from `results/vlm_gpt5_test_metrics.json`.
 
 ## Implementation Details
 
 ### Model Configuration
 
-- **Models**: GPT-4o (recommended), GPT-5 (experimental)
-- **Temperature**: 0.0 (deterministic) for GPT-4o, default (1.0) for GPT-5
+- **Models**: GPT-5 (primary), GPT-4o (fallback)
+- **Temperature**: Default (1.0) for GPT-5, 0.0 (deterministic) for GPT-4o
 - **Max tokens**: 150
 - **Image mode**: High detail
 - **Retry policy**: Single retry with corrective prompt on JSON validation failure
@@ -303,31 +303,31 @@ python scripts/01_prepare_dataset.py --dev-size 120 --test-size 380
 # 3. Run inference
 python scripts/05_answer_questions.py \
     --mode vlm_image \
-    --model gpt-4o \
+    --model gpt-5 \
     --questions data/processed/questions/dev.jsonl \
     --images-root data/raw \
-    --output outputs/answers/vlm_gpt4o_dev.jsonl
+    --output outputs/answers/vlm_gpt5_dev.jsonl
 
 python scripts/05_answer_questions.py \
     --mode vlm_image \
-    --model gpt-4o \
+    --model gpt-5 \
     --questions data/processed/questions/test.jsonl \
     --images-root data/raw \
-    --output outputs/answers/vlm_gpt4o_test.jsonl
+    --output outputs/answers/vlm_gpt5_test.jsonl
 
 # 4. Evaluate
 python scripts/06_evaluate_qa.py \
-    --pred vlm=outputs/answers/vlm_gpt4o_dev.jsonl \
+    --pred vlm=outputs/answers/vlm_gpt5_dev.jsonl \
     --questions data/processed/questions/dev.jsonl \
-    --output results/vlm_gpt4o_dev_metrics.json
+    --output results/vlm_gpt5_dev_metrics.json
 
 python scripts/06_evaluate_qa.py \
-    --pred vlm=outputs/answers/vlm_gpt4o_test.jsonl \
+    --pred vlm=outputs/answers/vlm_gpt5_test.jsonl \
     --questions data/processed/questions/test.jsonl \
-    --output results/vlm_gpt4o_test_metrics.json
+    --output results/vlm_gpt5_test_metrics.json
 
 # 5. View results
-cat results/vlm_gpt4o_test_metrics.json | jq '.vlm'
+cat results/vlm_gpt5_test_metrics.json | jq '.vlm'
 
 ## License
 
@@ -335,6 +335,6 @@ MIT License - See LICENSE file for details
 
 ## Acknowledgments
 
-- OpenAI for GPT-4o and GPT-5 Vision APIs
+- OpenAI for GPT-5 and GPT-4o Vision APIs
 - Hugging Face for dataset hosting
 - InfographicVQA dataset creators
